@@ -1,22 +1,43 @@
 #!/bin/sh
+set -e
 
 # Use PORT environment variable if provided, otherwise default to 80
 PORT=${PORT:-80}
 
-echo "Starting nginx on port ${PORT}..."
+echo "=========================================="
+echo "Configuring nginx for Railway deployment"
+echo "=========================================="
+echo "Port: ${PORT}"
 
-# Replace the port in nginx.conf
+# A configuração principal do nginx já está limitada a 1 worker via nginx-main.conf
+echo "Nginx configured with 1 worker process (memory optimized)"
+
+# Replace the port in server config
+echo "Updating server port configuration..."
 sed -i "s/listen 80;/listen ${PORT};/g" /etc/nginx/conf.d/default.conf
 
 # Verify nginx configuration
 echo "Verifying nginx configuration..."
-nginx -t
+if nginx -t; then
+    echo "✓ Nginx configuration is valid"
+else
+    echo "✗ Nginx configuration has errors!"
+    exit 1
+fi
 
 # Check if dist files exist
-echo "Checking if build files exist..."
-ls -la /usr/share/nginx/html/ || echo "WARNING: Build files not found!"
+echo "Checking build files..."
+if [ -f /usr/share/nginx/html/index.html ]; then
+    echo "✓ Build files found"
+    ls -lh /usr/share/nginx/html/ | head -5
+else
+    echo "✗ WARNING: Build files not found!"
+    exit 1
+fi
 
 # Start nginx
-echo "Starting nginx..."
+echo "=========================================="
+echo "Starting nginx on port ${PORT}..."
+echo "=========================================="
 exec nginx -g 'daemon off;'
 
