@@ -37,11 +37,13 @@ Este guia explica como configurar corretamente o frontend e backend no Railway p
 
    ⚠️ **Importante**: 
    - O frontend usa um **proxy nginx** que roteia `/api` para o backend
-   - **Prioridade**: `BACKEND_INTERNAL_URL` > `BACKEND_PUBLIC_URL` > padrão (`backend.railway.internal:8080`)
+   - **Prioridade**: `BACKEND_INTERNAL_URL` > padrão (`backend.railway.internal:8080`) > `BACKEND_PUBLIC_URL`
    - **Padrão automático**: Se nenhuma variável for configurada, usa `http://backend.railway.internal:8080`
+   - **CRÍTICO**: Rede privada sempre usa **HTTP**, nunca HTTPS
    - Se o nome do serviço do backend for diferente de `backend`, ajuste `BACKEND_INTERNAL_URL`
    - Exemplo: Se o serviço se chama `api` e roda na porta 3000, use `http://api.railway.internal:3000`
-   - **Se tiver erro 502**, tente usar `BACKEND_PUBLIC_URL` com a URL pública do backend (ex: `https://backend-production-fe3d.up.railway.app`)
+   - **NÃO configure** `BACKEND_PUBLIC_URL` a menos que a rede privada não funcione (use HTTP na rede privada sempre)
+   - Se tiver erro 504/502, verifique se não está usando HTTPS na rede privada
 
 3. **Verifique o Domain Público**
    - Vá em **Settings** → **Networking**
@@ -141,6 +143,22 @@ Navegador do Usuário
 ---
 
 ## 🆘 Troubleshooting
+
+### "504 Gateway Timeout" ou "upstream timed out" com HTTPS
+
+**Sintoma**: Logs mostram `upstream: "https://66.33.22.109:8080"` ou similar
+
+**Causa**: O nginx está tentando usar HTTPS na rede privada, mas a rede privada do Railway só funciona com HTTP.
+
+**Solução**:
+1. **Remova a variável `BACKEND_PUBLIC_URL`** se estiver configurada no frontend
+2. **Configure `BACKEND_INTERNAL_URL`** com HTTP (não HTTPS):
+   - Nome: `BACKEND_INTERNAL_URL`
+   - Valor: `http://backend.railway.internal:8080` (use HTTP, não HTTPS!)
+3. Ou **não configure nenhuma variável** - o sistema usará automaticamente `http://backend.railway.internal:8080`
+4. Faça um novo deploy
+
+**Importante**: A rede privada do Railway (`*.railway.internal`) **sempre** usa HTTP, nunca HTTPS.
 
 ### "502 Bad Gateway" ao fazer login/registro
 

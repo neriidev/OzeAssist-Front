@@ -17,19 +17,25 @@ echo "Updating server port configuration..."
 sed -i "s/listen 80;/listen ${PORT};/g" /etc/nginx/conf.d/default.conf
 
 # Configurar URL do backend
-# Prioridade: BACKEND_INTERNAL_URL > BACKEND_PUBLIC_URL > padrão (backend.railway.internal:8080)
+# Prioridade: BACKEND_INTERNAL_URL > padrão (backend.railway.internal:8080) > BACKEND_PUBLIC_URL
+# IMPORTANTE: Rede privada sempre usa HTTP, não HTTPS
 if [ -n "$BACKEND_INTERNAL_URL" ]; then
     BACKEND_URL="$BACKEND_INTERNAL_URL"
+    # Garantir que rede privada use HTTP
+    BACKEND_URL=$(echo "$BACKEND_URL" | sed 's|^https://backend\.railway\.internal|http://backend.railway.internal|')
+    BACKEND_URL=$(echo "$BACKEND_URL" | sed 's|^https://.*\.railway\.internal|http://&|')
     echo "Using BACKEND_INTERNAL_URL: ${BACKEND_URL}"
 elif [ -n "$BACKEND_PUBLIC_URL" ]; then
+    # Se usar URL pública, manter como está (pode ser HTTPS)
     BACKEND_URL="$BACKEND_PUBLIC_URL"
     echo "Using BACKEND_PUBLIC_URL: ${BACKEND_URL}"
+    echo "⚠️  Consider using BACKEND_INTERNAL_URL for better performance"
 else
     # Usar rede privada com porta 8080 (porta padrão do backend no Railway)
+    # SEMPRE usar HTTP na rede privada
     BACKEND_PORT_DEFAULT=${BACKEND_PORT:-8080}
     BACKEND_URL="http://backend.railway.internal:${BACKEND_PORT_DEFAULT}"
     echo "Using default private network URL: ${BACKEND_URL}"
-    echo "⚠️  If this doesn't work, set BACKEND_INTERNAL_URL or BACKEND_PUBLIC_URL"
 fi
 
 # Se BACKEND_PORT estiver definida e a URL não tiver porta, adicionar
@@ -43,6 +49,12 @@ fi
 
 # Remover /api do final da URL se estiver presente (o nginx.conf já adiciona)
 BACKEND_URL=$(echo "$BACKEND_URL" | sed 's|/api/*$||')
+
+# Garantir que URLs da rede privada sempre usem HTTP
+if echo "$BACKEND_URL" | grep -q "\.railway\.internal"; then
+    BACKEND_URL=$(echo "$BACKEND_URL" | sed 's|^https://|http://|')
+    echo "Forced HTTP for private network: ${BACKEND_URL}"
+fi
 
 echo "Final Backend URL (base): ${BACKEND_URL}"
 echo "Updating backend proxy configuration..."
