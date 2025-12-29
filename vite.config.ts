@@ -26,9 +26,11 @@ export default defineConfig(({ mode }) => {
             theme_color: '#0d9488',
             background_color: '#f8fafc',
             display: 'standalone',
+            display_override: ['standalone', 'fullscreen', 'minimal-ui'],
             orientation: 'portrait-primary',
             scope: '/',
-            start_url: '/',
+            start_url: '/?standalone=true',
+            prefer_related_applications: false,
             icons: [
               {
                 src: '/icons/icon-72x72.png',
