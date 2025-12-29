@@ -30,17 +30,18 @@ Este guia explica como configurar corretamente o frontend e backend no Railway p
 
    | Nome | Valor | Descrição |
    |------|-------|-----------|
-   | `BACKEND_INTERNAL_URL` | `http://backend.railway.internal` ou `http://backend.railway.internal:PORT` | URL da rede privada do backend (opcional) |
-   | `BACKEND_PUBLIC_URL` | `https://seu-backend.railway.app` | URL pública do backend (fallback se rede privada não funcionar) |
-   | `BACKEND_PORT` | `3000` ou porta do backend | Porta do backend (se diferente de 80) |
+   | `BACKEND_INTERNAL_URL` | `http://backend.railway.internal:8080` | URL da rede privada do backend com porta (opcional) |
+   | `BACKEND_PUBLIC_URL` | `https://backend-production-fe3d.up.railway.app` | URL pública do backend (fallback se rede privada não funcionar) |
+   | `BACKEND_PORT` | `8080` | Porta do backend (padrão: 8080, opcional se já estiver na URL) |
    | `GEMINI_API_KEY` | `sua-chave-api-gemini` | Chave da API do Google Gemini |
 
    ⚠️ **Importante**: 
    - O frontend usa um **proxy nginx** que roteia `/api` para o backend
-   - **Prioridade**: `BACKEND_INTERNAL_URL` > `BACKEND_PUBLIC_URL` > padrão (`backend.railway.internal`)
+   - **Prioridade**: `BACKEND_INTERNAL_URL` > `BACKEND_PUBLIC_URL` > padrão (`backend.railway.internal:8080`)
+   - **Padrão automático**: Se nenhuma variável for configurada, usa `http://backend.railway.internal:8080`
    - Se o nome do serviço do backend for diferente de `backend`, ajuste `BACKEND_INTERNAL_URL`
    - Exemplo: Se o serviço se chama `api` e roda na porta 3000, use `http://api.railway.internal:3000`
-   - **Se tiver erro 502**, tente usar `BACKEND_PUBLIC_URL` com a URL pública do backend
+   - **Se tiver erro 502**, tente usar `BACKEND_PUBLIC_URL` com a URL pública do backend (ex: `https://backend-production-fe3d.up.railway.app`)
 
 3. **Verifique o Domain Público**
    - Vá em **Settings** → **Networking**
