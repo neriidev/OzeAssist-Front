@@ -23,6 +23,7 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Estado para verificação inicial
   const [activeTab, setActiveTab] = useState<'dashboard' | 'nutrition' | 'history' | 'assistant' | 'profile' | 'reports' | 'affiliate'>('dashboard');
   
   // Modal States
@@ -49,6 +50,53 @@ const App: React.FC = () => {
     title: '',
     message: '',
   });
+
+  // Verificar autenticação ao carregar o app (lembrar login)
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('oze_token');
+        
+        if (!token) {
+          // Não há token, mostrar tela de login
+          setIsCheckingAuth(false);
+          return;
+        }
+
+        // Tentar buscar o perfil do usuário com o token salvo
+        try {
+          const profile = await apiService.getProfile();
+          
+          // Token válido, autenticar automaticamente
+          setUser({
+            name: profile.name,
+            email: profile.email,
+            affiliateCode: profile.affiliateCode,
+            medication: profile.medication,
+            currentDosage: profile.currentDosage,
+            dosageFrequency: profile.dosageFrequency,
+            weightGoal: profile.weightGoal,
+            initialWeight: profile.initialWeight,
+            createdAt: profile.createdAt,
+            isPremium: profile.isPremium,
+          });
+        } catch (error) {
+          // Token inválido ou expirado, limpar e mostrar tela de login
+          console.log('Token inválido ou expirado, fazendo logout...');
+          apiService.logout();
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error);
+        apiService.logout();
+        setUser(null);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, []); // Executar apenas uma vez ao montar o componente
 
   // Subscription Logic
   const isTrialExpired = React.useMemo(() => {
@@ -300,6 +348,20 @@ const App: React.FC = () => {
     setUnlockedAchievements([]);
     setUser(newUser);
   };
+
+  // Mostrar loading enquanto verifica autenticação
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center text-teal-700 font-bold text-xl shadow-sm mx-auto mb-4 animate-pulse">
+            OA
+          </div>
+          <p className="text-slate-600 text-sm">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <AuthScreen onAuthenticate={handleAuthenticate} />;
