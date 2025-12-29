@@ -43,8 +43,16 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticate }) => {
     setError('');
 
     if (isLogin) {
+      // Validação básica
+      if (!email || !password) {
+        setError('Preencha e-mail e senha.');
+        return;
+      }
+
       try {
+        console.log('Attempting login for:', email);
         const result = await apiService.login(email, password);
+        console.log('Login successful:', result);
         onAuthenticate({
           name: result.user.name,
           email: result.user.email,
@@ -58,6 +66,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticate }) => {
           isPremium: result.user.isPremium,
         });
       } catch (err: any) {
+        console.error('Login error:', err);
         setError(err.message || 'E-mail ou senha incorretos.');
       }
     } else {
@@ -340,7 +349,11 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticate }) => {
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form className="space-y-6" onSubmit={handleAuthSubmit}>
+        <form 
+          className="space-y-6" 
+          onSubmit={handleAuthSubmit}
+          noValidate
+        >
           {error && (
             <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-red-600 text-sm">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />

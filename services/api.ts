@@ -3,6 +3,12 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD ? '/api' : 'http://localhost:3001/api');
 
+console.log('API_BASE_URL configured as:', API_BASE_URL);
+console.log('Environment:', {
+  PROD: import.meta.env.PROD,
+  VITE_API_URL: import.meta.env.VITE_API_URL
+});
+
 class ApiService {
   private getToken(): string | null {
     return localStorage.getItem('oze_token');
@@ -22,17 +28,29 @@ class ApiService {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    const url = `${API_BASE_URL}${endpoint}`;
+    console.log('API Request:', { method: options.method || 'GET', url, endpoint });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-      throw new Error(error.error || `HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      console.log('API Response:', { status: response.status, statusText: response.statusText, url });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+        console.error('API Error:', error);
+        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Fetch error:', error);
+      throw error;
     }
-
-    return response.json();
   }
 
   // Auth

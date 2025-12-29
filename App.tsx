@@ -19,6 +19,7 @@ import { ACHIEVEMENTS_LIST } from './constants';
 import { apiService } from './services/api';
 import { LogOut } from 'lucide-react';
 import AlertDialog from './components/AlertDialog';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -454,6 +455,9 @@ const App: React.FC = () => {
         {showCheckout && <Checkout onSuccess={handleSubscriptionSuccess} onCancel={() => setShowCheckout(false)} />}
         <Navigation activeTab={activeTab === 'affiliate' ? 'profile' : activeTab} onTabChange={setActiveTab} />
       </div>
+      
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
     </div>
   );
 };

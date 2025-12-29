@@ -40,6 +40,29 @@ npm run build
 
 Os arquivos serão gerados na pasta `dist/`.
 
+## 📱 PWA (Progressive Web App)
+
+Este aplicativo é um PWA e pode ser instalado no dispositivo do usuário.
+
+### Funcionalidades PWA:
+
+- ✅ **Instalável**: Pode ser instalado como app nativo
+- ✅ **Offline**: Funciona offline com service worker
+- ✅ **Atualização automática**: Service worker atualiza automaticamente
+- ✅ **Ícones e splash screen**: Experiência nativa
+- ✅ **Notificação de instalação**: Prompt automático para instalar
+
+### Gerar Ícones:
+
+1. Crie um ícone base de 512x512 pixels
+2. Use uma ferramenta online:
+   - https://www.pwabuilder.com/imageGenerator
+   - https://realfavicongenerator.net/
+   - https://favicon.io/
+3. Salve os ícones em `public/icons/` com os tamanhos: 72, 96, 128, 144, 152, 192, 384, 512
+
+Veja mais detalhes em `public/icons/README.md`
+
 ## 🚂 Deploy no Railway
 
 Para instruções detalhadas sobre como configurar o deploy no Railway, consulte o arquivo **[RAILWAY_SETUP.md](./RAILWAY_SETUP.md)**.

@@ -58,7 +58,19 @@ fi
 
 echo "Final Backend URL (base): ${BACKEND_URL}"
 echo "Updating backend proxy configuration..."
+
+# Verificar se o placeholder existe no arquivo
+if ! grep -q "BACKEND_INTERNAL_URL_PLACEHOLDER" /etc/nginx/conf.d/default.conf; then
+    echo "⚠️  WARNING: BACKEND_INTERNAL_URL_PLACEHOLDER not found in nginx.conf!"
+    echo "Current nginx.conf proxy_pass line:"
+    grep "proxy_pass" /etc/nginx/conf.d/default.conf || echo "No proxy_pass found!"
+fi
+
 sed -i "s|BACKEND_INTERNAL_URL_PLACEHOLDER|${BACKEND_URL}|g" /etc/nginx/conf.d/default.conf
+
+# Verificar se a substituição funcionou
+echo "Verifying proxy configuration after replacement:"
+grep "proxy_pass" /etc/nginx/conf.d/default.conf | head -1
 
 # Verify nginx configuration
 echo "Verifying nginx configuration..."
