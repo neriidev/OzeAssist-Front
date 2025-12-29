@@ -16,9 +16,33 @@ echo "Nginx configured with 1 worker process (memory optimized)"
 echo "Updating server port configuration..."
 sed -i "s/listen 80;/listen ${PORT};/g" /etc/nginx/conf.d/default.conf
 
-# Configurar URL do backend (rede privada do Railway ou variável de ambiente)
-BACKEND_URL=${BACKEND_INTERNAL_URL:-"http://backend.railway.internal"}
-echo "Backend URL: ${BACKEND_URL}"
+# Configurar URL do backend
+# Prioridade: BACKEND_INTERNAL_URL > BACKEND_PUBLIC_URL > padrão (backend.railway.internal)
+if [ -n "$BACKEND_INTERNAL_URL" ]; then
+    BACKEND_URL="$BACKEND_INTERNAL_URL"
+    echo "Using BACKEND_INTERNAL_URL: ${BACKEND_URL}"
+elif [ -n "$BACKEND_PUBLIC_URL" ]; then
+    BACKEND_URL="$BACKEND_PUBLIC_URL"
+    echo "Using BACKEND_PUBLIC_URL: ${BACKEND_URL}"
+else
+    # Tentar rede privada com porta padrão do Railway (80)
+    BACKEND_URL="http://backend.railway.internal"
+    echo "Using default private network URL: ${BACKEND_URL}"
+    echo "⚠️  If this doesn't work, set BACKEND_INTERNAL_URL or BACKEND_PUBLIC_URL"
+fi
+
+# Se BACKEND_PORT estiver definida, adicionar à URL
+if [ -n "$BACKEND_PORT" ]; then
+    # Remover porta existente se houver e adicionar a nova
+    BACKEND_URL=$(echo "$BACKEND_URL" | sed 's|:\([0-9]*\)$||')
+    BACKEND_URL="${BACKEND_URL}:${BACKEND_PORT}"
+    echo "Backend URL with port: ${BACKEND_URL}"
+fi
+
+# Remover /api do final da URL se estiver presente (o nginx.conf já adiciona)
+BACKEND_URL=$(echo "$BACKEND_URL" | sed 's|/api/*$||')
+
+echo "Final Backend URL (base): ${BACKEND_URL}"
 echo "Updating backend proxy configuration..."
 sed -i "s|BACKEND_INTERNAL_URL_PLACEHOLDER|${BACKEND_URL}|g" /etc/nginx/conf.d/default.conf
 

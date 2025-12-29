@@ -30,14 +30,17 @@ Este guia explica como configurar corretamente o frontend e backend no Railway p
 
    | Nome | Valor | Descrição |
    |------|-------|-----------|
-   | `BACKEND_INTERNAL_URL` | `http://backend.railway.internal` | URL da rede privada do backend (opcional, padrão já configurado) |
+   | `BACKEND_INTERNAL_URL` | `http://backend.railway.internal` ou `http://backend.railway.internal:PORT` | URL da rede privada do backend (opcional) |
+   | `BACKEND_PUBLIC_URL` | `https://seu-backend.railway.app` | URL pública do backend (fallback se rede privada não funcionar) |
+   | `BACKEND_PORT` | `3000` ou porta do backend | Porta do backend (se diferente de 80) |
    | `GEMINI_API_KEY` | `sua-chave-api-gemini` | Chave da API do Google Gemini |
 
    ⚠️ **Importante**: 
-   - O frontend usa um **proxy nginx** que roteia `/api` para o backend via rede privada
-   - Não é necessário configurar `VITE_API_URL` em produção (o código usa `/api` automaticamente)
+   - O frontend usa um **proxy nginx** que roteia `/api` para o backend
+   - **Prioridade**: `BACKEND_INTERNAL_URL` > `BACKEND_PUBLIC_URL` > padrão (`backend.railway.internal`)
    - Se o nome do serviço do backend for diferente de `backend`, ajuste `BACKEND_INTERNAL_URL`
-   - Exemplo: Se o serviço se chama `api`, use `http://api.railway.internal`
+   - Exemplo: Se o serviço se chama `api` e roda na porta 3000, use `http://api.railway.internal:3000`
+   - **Se tiver erro 502**, tente usar `BACKEND_PUBLIC_URL` com a URL pública do backend
 
 3. **Verifique o Domain Público**
    - Vá em **Settings** → **Networking**
@@ -138,15 +141,41 @@ Navegador do Usuário
 
 ## 🆘 Troubleshooting
 
+### "502 Bad Gateway" ao fazer login/registro
+
+Este erro indica que o nginx não consegue conectar ao backend. Siga estes passos:
+
+1. **Verifique o nome do serviço do backend no Railway**
+   - No painel do Railway, veja qual é o nome exato do serviço do backend
+   - O nome deve corresponder na URL: `http://NOME_DO_SERVICO.railway.internal`
+
+2. **Configure a variável `BACKEND_INTERNAL_URL`**
+   - No frontend, adicione a variável `BACKEND_INTERNAL_URL`
+   - Use: `http://NOME_DO_SERVICO.railway.internal:PORT`
+   - Exemplo: Se o serviço se chama `api` e roda na porta `3000`, use `http://api.railway.internal:3000`
+
+3. **Se a rede privada não funcionar, use URL pública**
+   - Adicione a variável `BACKEND_PUBLIC_URL` no frontend
+   - Use a URL pública do backend: `https://seu-backend.railway.app`
+   - Isso fará o proxy usar a URL pública em vez da rede privada
+
+4. **Verifique se o backend está rodando**
+   - No Railway, vá no serviço do backend
+   - Verifique os logs para ver se está rodando corretamente
+   - Confirme que está escutando na porta correta
+
+5. **Verifique os logs do frontend**
+   - No Railway, vá no serviço do frontend → Deployments → View Logs
+   - Procure pela mensagem "Final Backend URL" para ver qual URL está sendo usada
+   - Verifique se há erros de conexão
+
 ### "Ainda está usando localhost:3001"
-- Verifique se a variável `VITE_API_URL` está configurada no Railway
-- Confirme que fez um novo deploy após adicionar a variável
-- Verifique os logs do build para ver se a variável foi injetada
+- Isso não deve acontecer em produção (o código usa `/api` automaticamente)
+- Se acontecer, verifique se `import.meta.env.PROD` está sendo detectado corretamente
 
 ### "Erro de CORS persiste"
-- Verifique se a URL do frontend está na lista de `origin` do CORS no backend
-- Confirme que o backend está rodando e acessível
-- Verifique se o backend está retornando os headers CORS corretos
+- Com o proxy nginx, CORS não deve ser necessário
+- Se ainda houver erro, verifique se o backend está configurado corretamente
 
 ### "API Key não funciona"
 - Verifique se `GEMINI_API_KEY` está configurada no Railway
