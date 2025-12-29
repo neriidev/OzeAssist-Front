@@ -1,0 +1,5 @@
+{
+  "name": "OzeAssist",
+  "description": "Um assistente pessoal para usuários de Ozempic. Acompanhe suas doses, gerencie o histórico de aplicações, visualize locais de injeção e tire dúvidas com uma IA especializada.",
+  "requestFramePermissions": []
+}
