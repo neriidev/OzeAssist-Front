@@ -16,6 +16,12 @@ echo "Nginx configured with 1 worker process (memory optimized)"
 echo "Updating server port configuration..."
 sed -i "s/listen 80;/listen ${PORT};/g" /etc/nginx/conf.d/default.conf
 
+# Configurar URL do backend (rede privada do Railway ou variável de ambiente)
+BACKEND_URL=${BACKEND_INTERNAL_URL:-"http://backend.railway.internal"}
+echo "Backend URL: ${BACKEND_URL}"
+echo "Updating backend proxy configuration..."
+sed -i "s|BACKEND_INTERNAL_URL_PLACEHOLDER|${BACKEND_URL}|g" /etc/nginx/conf.d/default.conf
+
 # Verify nginx configuration
 echo "Verifying nginx configuration..."
 if nginx -t; then

@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Em produção no Railway, usar /api (proxy nginx)
+// Em desenvolvimento, usar VITE_API_URL ou localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD ? '/api' : 'http://localhost:3001/api');
 
 class ApiService {
   private getToken(): string | null {
