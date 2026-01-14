@@ -39,23 +39,44 @@ class ApiService {
 
       console.log('API Response:', { status: response.status, statusText: response.statusText, url });
 
+      // Se for 204 No Content, retornar objeto vazio imediatamente
+      if (response.status === 204) {
+        return {} as T;
+      }
+
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        console.error('API Error:', error);
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        // Tentar ler o erro, mas não falhar se não houver JSON
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const text = await response.text();
+          if (text && text.trim()) {
+            try {
+              const error = JSON.parse(text);
+              errorMessage = error.error || error.message || errorMessage;
+            } catch {
+              errorMessage = text || errorMessage;
+            }
+          }
+        } catch {
+          // Se não conseguir ler o erro, usar mensagem padrão
+        }
+        console.error('API Error:', errorMessage);
+        throw new Error(errorMessage);
       }
 
       // Verificar se a resposta tem conteúdo antes de fazer parse JSON
-      const contentType = response.headers.get('content-type');
+      const contentType = response.headers.get('content-type') || '';
       const text = await response.text();
       
-      // Se a resposta estiver vazia ou for 204 No Content, retornar objeto vazio
-      if (response.status === 204 || !text || text.trim() === '') {
+      // Se a resposta estiver vazia, retornar objeto vazio
+      if (!text || text.trim() === '') {
+        console.log('Empty response body, returning empty object');
         return {} as T;
       }
       
       // Se não for JSON, retornar o texto
-      if (!contentType || !contentType.includes('application/json')) {
+      if (!contentType.includes('application/json')) {
+        console.log('Non-JSON response, returning text');
         return text as unknown as T;
       }
       
@@ -65,7 +86,7 @@ class ApiService {
         return data;
       } catch (parseError) {
         // Se falhar o parse, retornar objeto vazio
-        console.warn('Failed to parse JSON response, returning empty object');
+        console.warn('Failed to parse JSON response, returning empty object. Content-Type:', contentType, 'Text length:', text.length);
         return {} as T;
       }
     } catch (error) {
