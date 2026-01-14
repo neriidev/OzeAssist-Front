@@ -201,7 +201,7 @@ const Profile: React.FC<ProfileProps> = ({
         </div>
       </div>
 
-      {/* Affiliate Banner */}
+      {/* Affiliate Banner - Sempre disponível, não faz parte do plano premium */}
       <div 
         onClick={onNavigateToAffiliate}
         className="bg-indigo-600 rounded-2xl p-4 text-white shadow-md flex items-center justify-between cursor-pointer hover:bg-indigo-700 transition-all active:scale-95"
@@ -212,7 +212,7 @@ const Profile: React.FC<ProfileProps> = ({
           </div>
           <div>
             <h4 className="text-sm font-bold">Programa de Afiliados</h4>
-            <p className="text-[10px] opacity-80">Convide amigos e acumule pontos</p>
+            <p className="text-[10px] opacity-80">Convide amigos e acumule pontos • Gratuito para todos</p>
           </div>
         </div>
         <ChevronRight className="w-5 h-5 opacity-50" />
