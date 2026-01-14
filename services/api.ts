@@ -45,8 +45,29 @@ class ApiService {
         throw new Error(error.error || `HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data;
+      // Verificar se a resposta tem conteúdo antes de fazer parse JSON
+      const contentType = response.headers.get('content-type');
+      const text = await response.text();
+      
+      // Se a resposta estiver vazia ou for 204 No Content, retornar objeto vazio
+      if (response.status === 204 || !text || text.trim() === '') {
+        return {} as T;
+      }
+      
+      // Se não for JSON, retornar o texto
+      if (!contentType || !contentType.includes('application/json')) {
+        return text as unknown as T;
+      }
+      
+      // Tentar fazer parse do JSON
+      try {
+        const data = JSON.parse(text);
+        return data;
+      } catch (parseError) {
+        // Se falhar o parse, retornar objeto vazio
+        console.warn('Failed to parse JSON response, returning empty object');
+        return {} as T;
+      }
     } catch (error) {
       console.error('Fetch error:', error);
       throw error;
