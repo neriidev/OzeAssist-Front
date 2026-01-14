@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { InjectionRecord, HealthRecord } from '../types';
 import { Trash2, Calendar, MapPin, Weight, BarChart2, ChevronRight } from 'lucide-react';
 import CalendarView from './CalendarView';
@@ -7,7 +7,7 @@ import ConfirmDialog from './ConfirmDialog';
 interface HistoryProps {
   records: InjectionRecord[];
   healthRecords: HealthRecord[];
-  onDelete: (id: string, type: 'injection' | 'health') => void;
+  onDelete: (id: string, type: 'injection' | 'health') => Promise<void>;
   onNavigateToReports: () => void;
 }
 
@@ -24,19 +24,21 @@ const History: React.FC<HistoryProps> = ({ records, healthRecords, onDelete, onN
   });
 
   // Filter records based on selected month/year in calendar
-  const filteredRecords: TimelineItem[] = [
-    ...records.map(r => ({ ...r, type: 'injection' as const })),
-    ...healthRecords.map(r => ({ ...r, type: 'health' as const }))
-  ].filter(item => {
-    // Parse date manually to match CalendarView logic and avoid timezone shifts
-    const [datePart] = item.date.split('T');
-    const [yearStr, monthStr] = datePart.split('-');
-    const itemYear = parseInt(yearStr);
-    const itemMonth = parseInt(monthStr) - 1;
+  const filteredRecords: TimelineItem[] = useMemo(() => {
+    return [
+      ...records.map(r => ({ ...r, type: 'injection' as const })),
+      ...healthRecords.map(r => ({ ...r, type: 'health' as const }))
+    ].filter(item => {
+      // Parse date manually to match CalendarView logic and avoid timezone shifts
+      const [datePart] = item.date.split('T');
+      const [yearStr, monthStr] = datePart.split('-');
+      const itemYear = parseInt(yearStr);
+      const itemMonth = parseInt(monthStr) - 1;
 
-    return itemYear === currentDate.getFullYear() && 
-           itemMonth === currentDate.getMonth();
-  }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return itemYear === currentDate.getFullYear() && 
+             itemMonth === currentDate.getMonth();
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [records, healthRecords, currentDate]);
 
   const monthNames = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -172,8 +174,8 @@ const History: React.FC<HistoryProps> = ({ records, healthRecords, onDelete, onN
         confirmText="Excluir"
         cancelText="Cancelar"
         variant="danger"
-        onConfirm={() => {
-          onDelete(deleteConfirm.id, deleteConfirm.type);
+        onConfirm={async () => {
+          await onDelete(deleteConfirm.id, deleteConfirm.type);
           setDeleteConfirm({ isOpen: false, id: '', type: 'injection' });
         }}
         onCancel={() => setDeleteConfirm({ isOpen: false, id: '', type: 'injection' })}
