@@ -215,6 +215,11 @@ const App: React.FC = () => {
   };
 
   const handleSaveRecord = async (recordData: Omit<InjectionRecord, 'id'>) => {
+    if (isTrialExpired) {
+      setShowInjectionLogger(false);
+      setShowCheckout(true);
+      return;
+    }
     try {
       const newRecord = await apiService.createInjectionRecord({
         date: recordData.date,
@@ -243,6 +248,11 @@ const App: React.FC = () => {
   };
 
   const handleSaveHealthRecord = async (recordData: Omit<HealthRecord, 'id'>) => {
+    if (isTrialExpired) {
+      setShowHealthLogger(false);
+      setShowCheckout(true);
+      return;
+    }
     try {
       const newRecord = await apiService.createHealthRecord({
         date: recordData.date,
@@ -271,6 +281,10 @@ const App: React.FC = () => {
   };
 
   const handleUpdateNutrition = async (dayData: NutritionDay) => {
+    if (isTrialExpired) {
+      setShowCheckout(true);
+      return;
+    }
     try {
       await apiService.createOrUpdateNutritionDay({
         date: dayData.date,
@@ -299,6 +313,10 @@ const App: React.FC = () => {
   };
 
   const handleDelete = async (id: string, type: 'injection' | 'health') => {
+    if (isTrialExpired) {
+      setShowCheckout(true);
+      return;
+    }
     try {
       if (type === 'injection') {
         await apiService.deleteInjectionRecord(id);
@@ -407,17 +425,37 @@ const App: React.FC = () => {
                 user={user}
                 records={records} 
                 healthRecords={healthRecords}
-                onLogClick={() => setShowInjectionLogger(true)} 
-                onHealthLogClick={() => setShowHealthLogger(true)}
+                onLogClick={() => {
+                  if (isTrialExpired) {
+                    setShowCheckout(true);
+                  } else {
+                    setShowInjectionLogger(true);
+                  }
+                }} 
+                onHealthLogClick={() => {
+                  if (isTrialExpired) {
+                    setShowCheckout(true);
+                  } else {
+                    setShowHealthLogger(true);
+                  }
+                }}
                 onUpgradeClick={() => setShowCheckout(true)}
               />
             )}
             {activeTab === 'nutrition' && (
-              <Nutrition 
-                nutritionData={nutritionData}
-                onUpdateNutrition={handleUpdateNutrition}
-                onNavigateToAI={() => setActiveTab('assistant')}
-              />
+              isTrialExpired ? (
+                <PremiumBarrier 
+                  title="Diário Nutricional Bloqueado" 
+                  description="Seu período de teste grátis terminou. Assine o PRO para continuar registrando sua alimentação." 
+                  onSubscribe={() => setShowCheckout(true)}
+                />
+              ) : (
+                <Nutrition 
+                  nutritionData={nutritionData}
+                  onUpdateNutrition={handleUpdateNutrition}
+                  onNavigateToAI={() => setActiveTab('assistant')}
+                />
+              )
             )}
             
             {activeTab === 'reports' && (
@@ -437,12 +475,20 @@ const App: React.FC = () => {
             )}
             
             {activeTab === 'history' && (
-              <History 
-                records={records} 
-                healthRecords={healthRecords}
-                onDelete={handleDelete}
-                onNavigateToReports={() => setActiveTab('reports')}
-              />
+              isTrialExpired ? (
+                <PremiumBarrier 
+                  title="Histórico Bloqueado" 
+                  description="Seu período de teste grátis terminou. Assine o PRO para acessar seu histórico completo." 
+                  onSubscribe={() => setShowCheckout(true)}
+                />
+              ) : (
+                <History 
+                  records={records} 
+                  healthRecords={healthRecords}
+                  onDelete={handleDelete}
+                  onNavigateToReports={() => setActiveTab('reports')}
+                />
+              )
             )}
             
             {activeTab === 'assistant' && (
@@ -464,6 +510,10 @@ const App: React.FC = () => {
                  unlockedAchievements={unlockedAchievements}
                  onAddReminder={(r) => setReminders([...reminders, r])}
                  onDeleteReminder={async (id) => {
+                   if (isTrialExpired) {
+                     setShowCheckout(true);
+                     return;
+                   }
                    try {
                      await apiService.deleteReminder(id);
                      setReminders(reminders.filter(r => r.id !== id));
@@ -477,6 +527,10 @@ const App: React.FC = () => {
                    }
                  }}
                  onToggleReminder={async (id) => {
+                   if (isTrialExpired) {
+                     setShowCheckout(true);
+                     return;
+                   }
                    try {
                      const reminder = reminders.find(r => r.id === id);
                      if (reminder) {
@@ -512,8 +566,8 @@ const App: React.FC = () => {
           </main>
         </div>
 
-        {showInjectionLogger && <InjectionLogger onSave={handleSaveRecord} onCancel={() => setShowInjectionLogger(false)} />}
-        {showHealthLogger && <HealthLogger onSave={handleSaveHealthRecord} onCancel={() => setShowHealthLogger(false)} />}
+        {showInjectionLogger && !isTrialExpired && <InjectionLogger onSave={handleSaveRecord} onCancel={() => setShowInjectionLogger(false)} />}
+        {showHealthLogger && !isTrialExpired && <HealthLogger onSave={handleSaveHealthRecord} onCancel={() => setShowHealthLogger(false)} />}
         {showCheckout && <Checkout onSuccess={handleSubscriptionSuccess} onCancel={() => setShowCheckout(false)} />}
         <Navigation activeTab={activeTab === 'affiliate' ? 'profile' : activeTab} onTabChange={setActiveTab} />
       </div>

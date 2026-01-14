@@ -64,6 +64,11 @@ const Profile: React.FC<ProfileProps> = ({
   };
 
   const handleSaveReminder = async () => {
+    if (isTrialExpired) {
+      setShowAddReminder(false);
+      onUpgrade();
+      return;
+    }
     try {
       const reminderData = {
         dayOfWeek: newDay,
@@ -103,6 +108,7 @@ const Profile: React.FC<ProfileProps> = ({
   const now = new Date().getTime();
   const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
   const trialRemaining = Math.max(0, 7 - diffDays);
+  const isTrialExpired = !user.isPremium && diffDays >= 7;
 
   return (
     <div className="space-y-8 pb-24">
@@ -255,8 +261,19 @@ const Profile: React.FC<ProfileProps> = ({
             Lembretes
           </h3>
           <button 
-            onClick={() => setShowAddReminder(true)}
-            className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors"
+            onClick={() => {
+              if (isTrialExpired) {
+                onUpgrade();
+              } else {
+                setShowAddReminder(true);
+              }
+            }}
+            className={`p-2 rounded-full transition-colors ${
+              isTrialExpired 
+                ? 'text-slate-300 cursor-not-allowed' 
+                : 'text-indigo-600 hover:bg-indigo-50'
+            }`}
+            disabled={isTrialExpired}
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -317,14 +334,38 @@ const Profile: React.FC<ProfileProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                    <button 
-                     onClick={() => onToggleReminder(reminder.id)}
-                     className={`p-2 rounded-full transition-colors ${reminder.enabled ? 'text-indigo-500 hover:bg-indigo-50' : 'text-slate-300 hover:bg-slate-100'}`}
+                     onClick={() => {
+                       if (isTrialExpired) {
+                         onUpgrade();
+                       } else {
+                         onToggleReminder(reminder.id);
+                       }
+                     }}
+                     disabled={isTrialExpired}
+                     className={`p-2 rounded-full transition-colors ${
+                       isTrialExpired 
+                         ? 'text-slate-300 cursor-not-allowed' 
+                         : reminder.enabled 
+                           ? 'text-indigo-500 hover:bg-indigo-50' 
+                           : 'text-slate-300 hover:bg-slate-100'
+                     }`}
                    >
                      {reminder.enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
                    </button>
                    <button 
-                     onClick={() => setDeleteReminderConfirm({ isOpen: true, id: reminder.id })}
-                     className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                     onClick={() => {
+                       if (isTrialExpired) {
+                         onUpgrade();
+                       } else {
+                         setDeleteReminderConfirm({ isOpen: true, id: reminder.id });
+                       }
+                     }}
+                     disabled={isTrialExpired}
+                     className={`p-2 rounded-full transition-colors ${
+                       isTrialExpired 
+                         ? 'text-slate-300 cursor-not-allowed' 
+                         : 'text-slate-300 hover:text-red-500 hover:bg-red-50'
+                     }`}
                    >
                      <Trash2 className="w-5 h-5" />
                    </button>

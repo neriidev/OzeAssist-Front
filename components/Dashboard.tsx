@@ -27,6 +27,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, records, healthRecords, onL
     return Math.max(0, diff);
   }, [user]);
 
+  const isTrialExpired = React.useMemo(() => {
+    if (user.isPremium) return false;
+    const start = new Date(user.createdAt).getTime();
+    const now = new Date().getTime();
+    const diffDays = (now - start) / (1000 * 60 * 60 * 24);
+    return diffDays >= 7;
+  }, [user]);
+
   // Weight Data for Chart
   const weightData = [...healthRecords]
     .filter(r => r.weight !== undefined)
@@ -117,14 +125,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, records, healthRecords, onL
            <div className="grid grid-cols-2 gap-3 flex-1">
             <button 
               onClick={onLogClick}
-              className="py-4 bg-white border-2 border-teal-600 text-teal-700 font-bold rounded-2xl shadow-sm active:scale-95 transition-transform flex flex-col items-center justify-center gap-1 hover:bg-teal-50"
+              disabled={isTrialExpired}
+              className={`py-4 bg-white border-2 border-teal-600 text-teal-700 font-bold rounded-2xl shadow-sm active:scale-95 transition-transform flex flex-col items-center justify-center gap-1 hover:bg-teal-50 ${
+                isTrialExpired ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
               <Plus className="w-6 h-6" />
               <span className="text-sm">Registrar Dose</span>
             </button>
             <button 
               onClick={onHealthLogClick}
-              className="py-4 bg-white border-2 border-indigo-500 text-indigo-600 font-bold rounded-2xl shadow-sm active:scale-95 transition-transform flex flex-col items-center justify-center gap-1 hover:bg-indigo-50"
+              disabled={isTrialExpired}
+              className={`py-4 bg-white border-2 border-indigo-500 text-indigo-600 font-bold rounded-2xl shadow-sm active:scale-95 transition-transform flex flex-col items-center justify-center gap-1 hover:bg-indigo-50 ${
+                isTrialExpired ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
               <Activity className="w-6 h-6" />
               <span className="text-sm">Diário de Saúde</span>
