@@ -78,3 +78,6 @@ Para instruções detalhadas sobre como configurar o deploy no Railway, consulte
    - Certifique-se de que ambos os serviços têm Public Domain configurado
 
 Veja o guia completo em [RAILWAY_SETUP.md](./RAILWAY_SETUP.md).
+
+
+
