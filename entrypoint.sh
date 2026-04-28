@@ -59,7 +59,17 @@ fi
 echo "Final Backend URL (base): ${BACKEND_URL}"
 echo "Updating backend proxy configuration..."
 
-# Verificar se o placeholder existe no arquivo
+# Configurar o resolver DNS dinâmico do Railway
+echo "Configuring DNS resolvers for dynamic proxy..."
+# Extrai os nameservers do resolv.conf e adiciona colchetes em IPs IPv6 (exigido pelo nginx)
+RESOLVERS=$(awk 'BEGIN{ORS=" "} $1=="nameserver" { if ($2 ~ /:/) print "["$2"]"; else print $2 }' /etc/resolv.conf)
+if [ -z "$RESOLVERS" ]; then
+    RESOLVERS="8.8.8.8 1.1.1.1" # Fallback
+fi
+echo "Using resolvers: ${RESOLVERS}"
+sed -i "s|RESOLVER_PLACEHOLDER|${RESOLVERS}|g" /etc/nginx/conf.d/default.conf
+
+# Verificar se o placeholder do backend existe no arquivo
 if ! grep -q "BACKEND_INTERNAL_URL_PLACEHOLDER" /etc/nginx/conf.d/default.conf; then
     echo "⚠️  WARNING: BACKEND_INTERNAL_URL_PLACEHOLDER not found in nginx.conf!"
     echo "Current nginx.conf proxy_pass line:"
@@ -70,7 +80,7 @@ sed -i "s|BACKEND_INTERNAL_URL_PLACEHOLDER|${BACKEND_URL}|g" /etc/nginx/conf.d/d
 
 # Verificar se a substituição funcionou
 echo "Verifying proxy configuration after replacement:"
-grep "proxy_pass" /etc/nginx/conf.d/default.conf | head -1
+grep "proxy_pass\|resolver" /etc/nginx/conf.d/default.conf | head -2
 
 # Verify nginx configuration
 echo "Verifying nginx configuration..."
